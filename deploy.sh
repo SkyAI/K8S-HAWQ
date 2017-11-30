@@ -3,17 +3,26 @@
 SSH=ssh
 SCP=scp
 JOIN_CMD=
+LOG=./log
 
 err() {
-    echo -e "\\x1b[1;33mWARNING: $*\\x1b[0m"
+    echo -e "\\x1b[1;31mERROR: $*\\x1b[0m"
+    echo -e "\\x1b[1;31mERROR: $*\\x1b[0m" >> $LOG
 }
 
 warn() {
     echo -e "\\x1b[1;33mWARNING: $*\\x1b[0m"
+    echo -e "\\x1b[1;33mWARNING: $*\\x1b[0m" >> $LOG
 }
 
 info() {
     echo "INFO: $*"
+    echo "INFO: $*" >> $LOG
+}
+
+finish() {
+    echo -e "\\x1b[1;32mFINISH: $*\\x1b[0m"
+    echo -e "\\x1b[1;32mFINISH: $*\\x1b[0m" >> $LOG
 }
 
 get_ip_info() {
@@ -32,18 +41,23 @@ get_ip_info() {
 
 install_k8s() {
     local node=$1
-    $SSH $node "yum install kubeadm&& systemctl enable kubelet && systemctl start kubelet" >/dev/null || {
-        err "$SSH $node \"yum install kubeadm && systemctl enable kubelet && systemctl start kubelet\" failed"
+    $SSH $node "yum install kubeadm -y && systemctl enable kubelet && systemctl start kubelet" >> $LOG 2>&1 || {
+        err "$SSH $node \"yum install kubeadm -y && systemctl enable kubelet && systemctl start kubelet\" failed"
         return 1
     }
 }
 
 uninstall_k8s() {
     local node=$1
-    $SSH $node "systemctl disable kubelet && systemctl stop kubelet && yum remove kubeadm kubelet kubectl kubernetes-cni" > /dev/null 2>&1 || {
-        err "$SSH $node \"systemctl disable kubelet && systemctl stop kubelet && yum remove kubeadm kubelet kubectl kubernetes-cni\" failed"
-        return 1
-    }
+    if $SSH $node "rpm -qa | grep kube" ;then
+        $SSH $node "systemctl disable kubelet && systemctl stop kubelet && yum remove kubeadm kubelet kubectl kubernetes-cni -y" >> $LOG 2>&1 || {
+            err "$SSH $node \"systemctl disable kubelet && systemctl stop kubelet && yum remove kubeadm kubelet kubectl kubernetes-cni -y\" failed"
+            return 1
+        }
+	$SSH $node "sed -i '/KUBECONFIG/d' ~/.bashrc"
+    else
+        info "$node has not installed kubenetes"
+    fi
 }
 
 scp_scripts() {
@@ -57,7 +71,7 @@ scp_scripts() {
     local install_dir=$2
     local node=$3
     $SSH $node "[[ ! -d $install_dir ]] && mkdir -p $install_dir"
-    $SCP -r $scripts_dir $node:$install_dir > /dev/null || {
+    $SCP -r $scripts_dir $node:$install_dir >> $LOG 2>&1 || {
         err "$SCP -r $scripts_dir $node@$install_dir failed"
         return 1
     }
@@ -76,17 +90,17 @@ scp_and_load_images() {
     local pkgs_dir=$install_dir/pkgs
     local node=$3
     $SSH $node "[[ ! -d $pkgs_dir ]] && mkdir -p $pkgs_dir"
-    $SCP $images_path $node:$pkgs_dir > /dev/null || {
+    $SCP $images_path $node:$pkgs_dir >> $LOG 2>&1 || {
         err "$SCP $images_path $node:$pkgs_dir failed"
         return 1
     }
 
-    $SSH $node "cd $pkgs_dir && tar xzvf images.tar.gz" > /dev/null || {
+    $SSH $node "cd $pkgs_dir && tar xzvf images.tar.gz" >> $LOG 2>&1 || {
         err "$SSH $node \"cd $pkgs_dir && tar xzvf images.tar.gz\" failed"
         return 1
     }
 
-    $SSH $node "cd $bin_dir && sh load-all-images.sh $pkgs_dir/images" > /dev/null || {
+    $SSH $node "cd $bin_dir && sh load-all-images.sh $pkgs_dir/images" >> $LOG 2>&1 || {
         err "$SSH $node \"cd $bin_dir && sh load-all-images.sh $pkgs_dir/images\" failed"
         return 1
     }
@@ -95,16 +109,14 @@ scp_and_load_images() {
 init_masters() {
     local master_nodes=$1
     for node in $master_nodes; do
-        echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables
-        swapoff -a
-        JOIN_CMD=$(kubeadm init --kubernetes-version=v1.8.4 --pod-network-cidr=192.168.0.0/16 >&1 | grep 'kubeadm join')
+        JOIN_CMD=$($SSH $node "echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables && swapoff -a && kubeadm init --kubernetes-version=v1.8.4 --pod-network-cidr=192.168.0.0/16 >&1 | grep 'kubeadm join'")
         if [[ -s "$JOIN_CMD" ]]; then
             err "k8s master init failed"
             return 1
         fi
 
-        echo export KUBECONFIG=/etc/kubernetes/admin.conf >> ~/.bashrc && source ~/.bashrc
-        export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml > /dev/null || {
+        $SSH $node "echo export KUBECONFIG=/etc/kubernetes/admin.conf >> ~/.bashrc && source ~/.bashrc" >> $LOG 2>&1
+        $SSH $node "export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml" >> $LOG 2>&1 || {
             err "k8s get init calico failed"
             return 1
         }
@@ -112,18 +124,19 @@ init_masters() {
 }
 
 init_workers() {
+    # TODO optimize
+    local master_node=$MASTERS
     local worker_nodes=$1
     for node in $worker_nodes; do
-        echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables
-        swapoff -a
-
         [[ -s "$JOIN_CMD" ]] && {
             err "join cmd is empty"
             return 1
         }
 
-        $SSH $node "$JOIN_CMD" > /dev/null || {
-            err "$SSH $node \"$JOIN_CMD\" failed"
+        $SCP $master_node:/etc/kubernetes/admin.conf $node://etc/kubernetes/ >> $LOG 2>&1
+        $SSH $node "echo export KUBECONFIG=/etc/kubernetes/admin.conf >> ~/.bashrc && source ~/.bashrc" >> $LOG 2>&1
+        $SSH $node "echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables && swapoff -a && $JOIN_CMD" >> $LOG 2>&1 || {
+            err "$SSH $node \"echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables && swapoff -a && $JOIN_CMD\" failed"
             return 1
         }
     done
@@ -132,7 +145,7 @@ init_workers() {
 reset_k8s_nodes() {
     local nodes=$1
     for node in $nodes; do
-        $SSH $node "kubeadm reset" > /dev/null 2>&1
+        $SSH $node "kubeadm reset" >> $LOG 2>&1
     done
 }
 
@@ -140,7 +153,7 @@ cleanup() {
     for node in $MASTERS $WORKERS; do
         reset_k8s_nodes $node
         uninstall_k8s $node
-        $SSH $node "[[ "$INSTALL_DIR" != "/" ]] && [[ -d $INSTALL_DIR ]] && rm -rf $INSTALL_DIR/*"
+        $SSH $node "[[ "$INSTALL_DIR" != "/" ]] && [[ "x$INSTALL_DIR" != "x" ]] && [[ -d $INSTALL_DIR ]] && rm -rf $INSTALL_DIR/*"
     done
 }
 
@@ -197,9 +210,9 @@ case $action in
                 err "init k8s master($node) failed"
                 cleanup && exit 1
             }
-            info "init k8s master($node) finished"
+            finish "init k8s master($node) finished"
         done
-        info "install k8s master on ($MASTERS) finished"
+        finish "install k8s master on ($MASTERS) finished"
 
         # init workers
         for node in $WORKERS; do
@@ -229,9 +242,9 @@ case $action in
                 err "init k8s worker($node) failed"
                 cleanup && exit 1
             }
-            info "init k8s worker($node) finished"
+            finish "init k8s worker($node) finished"
         done
-        info "install k8s workers on ($WORKERS) finished"
+        finish "install k8s workers on ($WORKERS) finished"
     ;;
     uninstall)
         cleanup && info "uninstall k8s cluster finished"
