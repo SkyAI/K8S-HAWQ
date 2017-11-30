@@ -41,15 +41,25 @@ get_ip_info() {
 
 install_k8s() {
     local node=$1
-    $SSH $node "yum install kubeadm -y && systemctl enable kubelet && systemctl start kubelet" >> $LOG 2>&1 || {
-        err "$SSH $node \"yum install kubeadm -y && systemctl enable kubelet && systemctl start kubelet\" failed"
+    $SSH $node "yum install kubeadm -y" >> $LOG 2>&1 || {
+        err "$SSH $node \"yum install kubeadm -y\" failed"
+        return 1
+    }
+
+    $SSH $node "echo -e \"[Service]\nEnvironment=\"KUBELET_EXTRA_ARGS=--cgroup-driver=cgroupfs\"\" > /etc/systemd/system/kubelet.service.d/05-custom.conf" >> $LOG 2>&1 || {
+        err "$SSH $node to generate /etc/systemd/system/kubelet.service.d/05-custom.conf failed"
+        return 1
+    }
+
+    $SSH $node "systemctl daemon-reload && systemctl enable kubelet && systemctl start kubelet" >> $LOG 2>&1 || {
+        err "$SSH $node \"systemctl daemon-reload && systemctl enable kubelet && systemctl start kubelet\" failed"
         return 1
     }
 }
 
 uninstall_k8s() {
     local node=$1
-    if $SSH $node "rpm -qa | grep kube" ;then
+    if $SSH $node "rpm -qa | grep kube" >> $LOG 2>&1 ;then
         $SSH $node "systemctl disable kubelet && systemctl stop kubelet && yum remove kubeadm kubelet kubectl kubernetes-cni -y" >> $LOG 2>&1 || {
             err "$SSH $node \"systemctl disable kubelet && systemctl stop kubelet && yum remove kubeadm kubelet kubectl kubernetes-cni -y\" failed"
             return 1
@@ -117,7 +127,7 @@ init_masters() {
 
         $SSH $node "echo export KUBECONFIG=/etc/kubernetes/admin.conf >> ~/.bashrc && source ~/.bashrc" >> $LOG 2>&1
         $SSH $node "export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml" >> $LOG 2>&1 || {
-            err "k8s get init calico failed"
+            err "k8s init calico failed"
             return 1
         }
     done
@@ -145,7 +155,15 @@ init_workers() {
 reset_k8s_nodes() {
     local nodes=$1
     for node in $nodes; do
-        $SSH $node "kubeadm reset" >> $LOG 2>&1
+        local hostname=$(grep $node /etc/hosts | cut -f2 -d' ')
+        if [[ "x$hostname" = "x" ]]; then
+            err "get $node hostname from /etc/hosts failed"
+            continue
+        fi
+
+        $SSH $node "kubectl drain $node --delete-local-data --force --ignore-daemonsets && kubectl delete node $node && kubeadm reset" >> $LOG 2>&1 || {
+            warn "$SSH $node kubectl drain $node --delete-local-data --force --ignore-daemonsets && kubectl delete node $node && kubeadm reset failed, continue reset next k8s node"
+        }
     done
 }
 
