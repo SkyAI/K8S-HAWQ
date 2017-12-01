@@ -70,35 +70,41 @@ uninstall_k8s() {
     fi
 }
 
-scp_scripts() {
-    local deploy_dir=$1
+scp_scripts_and_conf() {
+    local deploy_dir=$DEPLOY_DIR
     local scripts_dir=$deploy_dir/bin
     [[ -d "$scripts_dir" ]] || {
         err "$scripts_dir is not exist"
         return 1
     }
 
-    local install_dir=$2
-    local node=$3
+    local install_dir=$INSTALL_DIR
+    local node=$1
     $SSH $node "[[ ! -d $install_dir ]] && mkdir -p $install_dir"
     $SCP -r $scripts_dir $node:$install_dir >> $LOG 2>&1 || {
         err "$SCP -r $scripts_dir $node@$install_dir failed"
         return 1
     }
+
+    local conf_dir=$deploy_dir/conf
+    $SCP -r $conf_dir $node:$install_dir >> $LOG 2>&1 || {
+        err "$SCP -r $conf_dir $node@$install_dir failed"
+        return 1
+    }
 }
 
 scp_and_load_images() {
-    local deploy_dir=$1
+    local deploy_dir=$DEPLOY_DIR
     local images_path=$deploy_dir/pkgs/images.tar.gz
     [[ -f "$images_path" ]] || {
         err "$images_path is not exist"
         return 1
     }
 
-    local install_dir=$2
+    local install_dir=$INSTALL_DIR
     local bin_dir=$install_dir/bin
     local pkgs_dir=$install_dir/pkgs
-    local node=$3
+    local node=$1
     $SSH $node "[[ ! -d $pkgs_dir ]] && mkdir -p $pkgs_dir"
     $SCP $images_path $node:$pkgs_dir >> $LOG 2>&1 || {
         err "$SCP $images_path $node:$pkgs_dir failed"
@@ -126,7 +132,7 @@ init_masters() {
         fi
 
         $SSH $node "echo export KUBECONFIG=/etc/kubernetes/admin.conf >> ~/.bashrc && source ~/.bashrc" >> $LOG 2>&1
-        $SSH $node "export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml" >> $LOG 2>&1 || {
+        $SSH $node "export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl apply -f $INSTALL_DIR/conf/calico.yaml" >> $LOG 2>&1 || {
             err "k8s init calico failed"
             return 1
         }
@@ -138,7 +144,7 @@ init_workers() {
     local master_node=$MASTERS
     local worker_nodes=$1
     for node in $worker_nodes; do
-        [[ -s "$JOIN_CMD" ]] && {
+        [[ "x$JOIN_CMD" = "x" ]] && {
             err "join cmd is empty"
             return 1
         }
@@ -155,17 +161,25 @@ init_workers() {
 reset_k8s_nodes() {
     local nodes=$1
     for node in $nodes; do
-        local hostname=$(grep $node /etc/hosts | cut -f2 -d' ')
+        local hostname=$(grep $node /etc/hosts | awk -F" " '{print $2}')
         if [[ "x$hostname" = "x" ]]; then
             err "get $node hostname from /etc/hosts failed"
             continue
         fi
 
-        $SSH $node "kubectl drain $node --delete-local-data --force --ignore-daemonsets && kubectl delete node $node && kubeadm reset" >> $LOG 2>&1 || {
-            warn "$SSH $node kubectl drain $node --delete-local-data --force --ignore-daemonsets && kubectl delete node $node && kubeadm reset failed, continue reset next k8s node"
+        $SSH $node "kubectl drain $hostname --delete-local-data --force --ignore-daemonsets && kubectl delete node $hostname" >> $LOG 2>&1 || {
+            warn "$SSH $node kubectl drain $hostname --delete-local-data --force --ignore-daemonsets && kubectl delete node $hostname failed, continue to exec kubeadm reset"
+        }
+
+        $SSH $node "kubeadm reset" >> $LOG 2>&1 || {
+            warn "$SSH $node kubeadm reset failed, continue to reset next k8s node"
         }
     done
 }
+
+#check_status() {
+#
+#}
 
 cleanup() {
     for node in $MASTERS $WORKERS; do
@@ -173,6 +187,7 @@ cleanup() {
         uninstall_k8s $node
         $SSH $node "[[ "$INSTALL_DIR" != "/" ]] && [[ "x$INSTALL_DIR" != "x" ]] && [[ -d $INSTALL_DIR ]] && rm -rf $INSTALL_DIR/*"
     done
+    return 0
 }
 
 
@@ -203,14 +218,14 @@ case $action in
         # init master
         for node in $MASTERS; do
             info "begin to scp scripts to master($node) ..."
-            scp_scripts $DEPLOY_DIR $INSTALL_DIR "$node" || {
+            scp_scripts_and_conf "$node" || {
                 err "scp scripts to k8s master($node) failed, revert all installed nodes"
                 cleanup && exit 1
             }
             info "scp scripts to master($node) finished"
 
             info "begin to scp and load images on master($node) ..."
-            scp_and_load_images $DEPLOY_DIR $INSTALL_DIR "$node" || {
+            scp_and_load_images "$node" || {
                 err "scp and load images to k8s master($node) failed, revert all installed nodes"
                 cleanup && exit 1
             }
@@ -235,14 +250,14 @@ case $action in
         # init workers
         for node in $WORKERS; do
             info "begin to scp scripts to worker($node) ..."
-            scp_scripts $DEPLOY_DIR $INSTALL_DIR "$node" || {
+            scp_scripts_and_conf "$node" || {
                 err "scp scripts to k8s worker($node) failed, revert all installed nodes"
                 cleanup && exit 1
             }
             info "scp scripts to worker($node) finished"
 
             info "begin to scp and load images on worker($node) ..."
-            scp_and_load_images $DEPLOY_DIR $INSTALL_DIR "$node" || {
+            scp_and_load_images "$node" || {
                 err "scp and load images to k8s worker($node) failed, revert all installed nodes"
                 cleanup && exit 1
             }
