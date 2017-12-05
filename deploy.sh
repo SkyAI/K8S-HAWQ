@@ -125,7 +125,7 @@ scp_and_load_images() {
 init_masters() {
     local master_nodes=$1
     for node in $master_nodes; do
-        JOIN_CMD=$($SSH $node "echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables && swapoff -a && kubeadm init --kubernetes-version=v1.8.4 --pod-network-cidr=192.168.0.0/16 >&1 | grep 'kubeadm join'")
+        JOIN_CMD=$($SSH $node "echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables && swapoff -a && kubeadm init --kubernetes-version=v1.8.4 --apiserver-advertise-address=$node --pod-network-cidr=192.168.0.0/16 >&1 | grep 'kubeadm join'")
         if [[ -s "$JOIN_CMD" ]]; then
             err "k8s master init failed"
             return 1
@@ -166,17 +166,34 @@ install_dashboard() {
         return 1
     }
 
-    local kube_apiserver_yaml_path=$CONF_DIR/kube-apiserver.yaml
-    [[ -f $kube_apiserver_yaml_path ]] || {
-        err "$kube_apiserver_yaml_path is not a file"
-        return 1
-    }
-
     $SSH $master_node "echo \"$DASHBOARD_ADMIN_PASSWD,$DASHBOARD_ADMIN_USER,1,\\\"system:masters\\\"\" > /etc/kubernetes/pki/basic_auth.csv" >> $LOG 2>&1 || {
         err "$SSH $master_node generate /etc/kubernetes/pki/basic_auth.csv failed"
         return 1
     }
-    $SCP $kube_apiserver_yaml_path $master_node:/etc/kubernetes/manifests >> $LOG 2>&1
+
+    # update /etc/kubernetes/manifests/kube-apiserver.yaml
+    $SSH $master_node "sed -i \"/- --etcd-servers/a\\    - --insecure-port=$INSECURE_PORT\" /etc/kubernetes/manifests/kube-apiserver.yaml" || {
+        err "$SSH $master_node \"sed -i \"/- --etcd-servers/a\\    - --insecure-port=$INSECURE_PORT\" /etc/kubernetes/manifests/kube-apiserver.yaml\" failed"
+        return 1
+    }
+    $SSH $master_node "sed -i '/- --etcd-servers/a\\    - --basic-auth-file=/etc/kubernetes/pki/basic_auth.csv' /etc/kubernetes/manifests/kube-apiserver.yaml" || {
+        err "$SSH $master_node \"sed -i '/- --etcd-servers/a\\    - --basic-auth-file=/etc/kubernetes/pki/basic_auth.csv' /etc/kubernetes/manifests/kube-apiserver.yaml\" failed"
+        return 1
+    }
+    $SSH $master_node "sed -i '/- --etcd-servers/a\\    - --anonymous-auth=false' /etc/kubernetes/manifests/kube-apiserver.yaml" || {
+        err "$SSH $master_node \"sed -i '/- --etcd-servers/a\\    - --anonymous-auth=false' /etc/kubernetes/manifests/kube-apiserver.yaml\" failed"
+        return 1
+    }
+    $SSH $master_node "sed -i \"s/port:.*/port: $INSECURE_PORT/\" /etc/kubernetes/manifests/kube-apiserver.yaml" || {
+        err "$SSH $master_node \"sed -i \"s/port:.*/port: $INSECURE_PORT/\" /etc/kubernetes/manifests/kube-apiserver.yaml\" failed"
+        return 1
+    }
+    $SSH $master_node "sed -i 's/scheme:.*/scheme: HTTP/' /etc/kubernetes/manifests/kube-apiserver.yaml" || {
+        err "$SSH $master_node \"sed -i 's/scheme:.*/scheme: HTTP/' /etc/kubernetes/manifests/kube-apiserver.yaml\" failed"
+        return 1
+    }
+
+    # restart kubelet
     $SSH $master_node "systemctl restart kubelet" >> $LOG 2>&1 || {
         err "$SSH $master_node \"systemctl restart kubelet\" failed"
         return 1
@@ -247,6 +264,7 @@ DEPLOY_DIR=$(grep -v -e "^#" -e "^$" $DEPLOY_FILE_PATH | grep DEPLOY_DIR | cut -
 INSTALL_DIR=$(grep -v -e "^#" -e "^$" $DEPLOY_FILE_PATH | grep INSTALL_DIR | cut -f2 -d"=")
 DASHBOARD_ADMIN_USER=$(grep -v -e "^#" -e "^$" $DEPLOY_FILE_PATH | grep DASHBOARD_ADMIN_USER | cut -f2 -d"=")
 DASHBOARD_ADMIN_PASSWD=$(grep -v -e "^#" -e "^$" $DEPLOY_FILE_PATH | grep DASHBOARD_ADMIN_PASSWD | cut -f2 -d"=")
+INSECURE_PORT=$(grep -v -e "^#" -e "^$" $DEPLOY_FILE_PATH | grep INSECURE_PORT | cut -f2 -d"=")
 MASTERS=$(get_ip_info $IP_FILE_PATH "master")
 WORKERS=$(get_ip_info $IP_FILE_PATH "worker")
 
