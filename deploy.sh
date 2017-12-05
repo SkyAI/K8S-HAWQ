@@ -158,8 +158,41 @@ init_workers() {
     done
 }
 
-reset_k8s_nodes() {
-    local nodes=$1
+install_dashboard() {
+    local master_node=$1
+    local dashboard_yaml_path=$CONF_DIR/kubernetes-dashboard.yaml
+    [[ -f $dashboard_yaml_path ]] || {
+        err "$dashboard_yaml_path is not a file"
+        return 1
+    }
+
+    local kube_apiserver_yaml_path=$CONF_DIR/kube-apiserver.yaml
+    [[ -f $kube_apiserver_yaml_path ]] || {
+        err "$kube_apiserver_yaml_path is not a file"
+        return 1
+    }
+
+    $SSH $master_node "echo \"$DASHBOARD_ADMIN_PASSWD,$DASHBOARD_ADMIN_USER,1,\\\"system:masters\\\"\" > /etc/kubernetes/pki/basic_auth.csv" >> $LOG 2>&1 || {
+        err "$SSH $master_node generate /etc/kubernetes/pki/basic_auth.csv failed"
+        return 1
+    }
+    $SCP $kube_apiserver_yaml_path $master_node:/etc/kubernetes/manifests >> $LOG 2>&1
+    $SSH $master_node "systemctl restart kubelet" >> $LOG 2>&1 || {
+        err "$SSH $master_node \"systemctl restart kubelet\" failed"
+        return 1
+    }
+    info "sleep for a while to wait for kubelet restart finished"
+    sleep 15
+    $SCP $dashboard_yaml_path $master_node:/etc/kubernetes/manifests >> $LOG 2>&1
+    $SSH $master_node "kubectl create -f /etc/kubernetes/manifests/kubernetes-dashboard.yaml" >> $LOG 2>&1 || {
+        err "$SSH $master_node \"kubectl create -f /etc/kubernetes/manifests/kubernetes-dashboard.yaml\" failed"
+        return 1
+    }
+}
+
+drain_and_delete_nodes() {
+    local master=$1
+    local nodes=$2
     for node in $nodes; do
         local hostname=$(grep $node /etc/hosts | awk -F" " '{print $2}')
         if [[ "x$hostname" = "x" ]]; then
@@ -167,10 +200,15 @@ reset_k8s_nodes() {
             continue
         fi
 
-        $SSH $node "kubectl drain $hostname --delete-local-data --force --ignore-daemonsets && kubectl delete node $hostname" >> $LOG 2>&1 || {
-            warn "$SSH $node kubectl drain $hostname --delete-local-data --force --ignore-daemonsets && kubectl delete node $hostname failed, continue to exec kubeadm reset"
+        $SSH $master "kubectl drain $hostname --delete-local-data --force --ignore-daemonsets && kubectl delete node $hostname" >> $LOG 2>&1 || {
+            warn "$SSH $node kubectl drain $hostname --delete-local-data --force --ignore-daemonsets && kubectl delete node $hostname failed, continue to drain and delete next node"
         }
+    done
+}
 
+reset_k8s_nodes() {
+    local nodes=$1
+    for node in $nodes; do
         $SSH $node "kubeadm reset" >> $LOG 2>&1 || {
             warn "$SSH $node kubeadm reset failed, continue to reset next k8s node"
         }
@@ -182,14 +220,17 @@ reset_k8s_nodes() {
 #}
 
 cleanup() {
-    for node in $MASTERS $WORKERS; do
+    for node in $MASTERS; do
+        drain_and_delete_nodes $node "$WORKERS"
+    done
+
+    for node in $WORKERS $MASTERS; do
         reset_k8s_nodes $node
         uninstall_k8s $node
         $SSH $node "[[ "$INSTALL_DIR" != "/" ]] && [[ "x$INSTALL_DIR" != "x" ]] && [[ -d $INSTALL_DIR ]] && rm -rf $INSTALL_DIR/*"
     done
     return 0
 }
-
 
 # parse params and init
 CURRENT_DIR=$(cd $(dirname $0);pwd)
@@ -204,6 +245,8 @@ DEPLOY_FILE_PATH=$CONF_DIR/deploy.conf
 
 DEPLOY_DIR=$(grep -v -e "^#" -e "^$" $DEPLOY_FILE_PATH | grep DEPLOY_DIR | cut -f2 -d"=")
 INSTALL_DIR=$(grep -v -e "^#" -e "^$" $DEPLOY_FILE_PATH | grep INSTALL_DIR | cut -f2 -d"=")
+DASHBOARD_ADMIN_USER=$(grep -v -e "^#" -e "^$" $DEPLOY_FILE_PATH | grep DASHBOARD_ADMIN_USER | cut -f2 -d"=")
+DASHBOARD_ADMIN_PASSWD=$(grep -v -e "^#" -e "^$" $DEPLOY_FILE_PATH | grep DASHBOARD_ADMIN_PASSWD | cut -f2 -d"=")
 MASTERS=$(get_ip_info $IP_FILE_PATH "master")
 WORKERS=$(get_ip_info $IP_FILE_PATH "worker")
 
@@ -278,9 +321,19 @@ case $action in
             finish "init k8s worker($node) finished"
         done
         finish "install k8s workers on ($WORKERS) finished"
+
+        # install dashboard
+        for node in $MASTERS; do
+            info "begin to install dashboard"
+            install_dashboard $node || {
+                err "install dashboard failed"
+                cleanup && exit 1
+            }
+            finish "install dashboard finished, now you can access https://$node:6443/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/ on browser"
+        done
     ;;
     uninstall)
-        cleanup && info "uninstall k8s cluster finished"
+        cleanup && finish "uninstall k8s cluster finished"
         exit 0
     ;;
     *)
