@@ -1,0 +1,582 @@
+INFO: begin to scp scripts to master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+INFO: scp scripts to master(192.168.20.232) finished
+INFO: begin to scp and load images on master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+images/
+images/kube-apiserver-amd64.tar
+images/kube-controller-manager-amd64.tar
+images/kube-scheduler-amd64.tar
+images/kube-proxy-amd64.tar
+images/k8s-dns-sidecar-amd64.tar
+images/k8s-dns-kube-dns-amd64.tar
+images/k8s-dns-dnsmasq-nanny-amd64.tar
+images/etcd-amd64.tar
+images/pause-amd64.tar
+images/kubernetes-dashboard-amd64.tar
+images/node.tar
+images/kube-controllers.tar
+images/cni.tar
+images/etcd.tar
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Loaded image: quay.io/calico/cni:v1.11.1
+Loaded image: gcr.io/google_containers/etcd-amd64:3.0.17
+Loaded image: quay.io/coreos/etcd:v3.1.10
+Loaded image: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.5
+Loaded image: gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.5
+Loaded image: gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.5
+Loaded image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.4
+Loaded image: gcr.io/google_containers/kube-controller-manager-amd64:v1.8.4
+Loaded image: quay.io/calico/kube-controllers:v1.0.1
+Loaded image: gcr.io/google_containers/kube-proxy-amd64:v1.8.4
+Loaded image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.8.0
+Loaded image: gcr.io/google_containers/kube-scheduler-amd64:v1.8.4
+Loaded image: quay.io/calico/node:v2.6.3
+Loaded image: gcr.io/google_containers/pause-amd64:3.0
+INFO: scp and load images on master(192.168.20.232) finished
+INFO: begin to install k8s on master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.nju.edu.cn
+ * extras: mirrors.nju.edu.cn
+ * updates: mirrors.tuna.tsinghua.edu.cn
+Resolving Dependencies
+--> Running transaction check
+---> Package kubeadm.x86_64 0:1.8.4-0 will be installed
+--> Processing Dependency: kubelet >= 1.6.0 for package: kubeadm-1.8.4-0.x86_64
+--> Processing Dependency: kubectl >= 1.6.0 for package: kubeadm-1.8.4-0.x86_64
+--> Processing Dependency: kubernetes-cni for package: kubeadm-1.8.4-0.x86_64
+--> Running transaction check
+---> Package kubectl.x86_64 0:1.8.4-0 will be installed
+---> Package kubelet.x86_64 0:1.8.4-0 will be installed
+---> Package kubernetes-cni.x86_64 0:0.5.1-0 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package                Arch           Version         Repository          Size
+================================================================================
+Installing:
+ kubeadm                x86_64         1.8.4-0         SkyAXE-k8s          15 M
+Installing for dependencies:
+ kubectl                x86_64         1.8.4-0         SkyAXE-k8s         7.3 M
+ kubelet                x86_64         1.8.4-0         SkyAXE-k8s          16 M
+ kubernetes-cni         x86_64         0.5.1-0         SkyAXE-k8s         7.4 M
+
+Transaction Summary
+================================================================================
+Install  1 Package (+3 Dependent packages)
+
+Total download size: 45 M
+Installed size: 242 M
+Downloading packages:
+--------------------------------------------------------------------------------
+Total                                               94 MB/s |  45 MB  00:00     
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : kubernetes-cni-0.5.1-0.x86_64                                1/4 
+  Installing : kubelet-1.8.4-0.x86_64                                       2/4 
+  Installing : kubectl-1.8.4-0.x86_64                                       3/4 
+  Installing : kubeadm-1.8.4-0.x86_64                                       4/4 
+  Verifying  : kubelet-1.8.4-0.x86_64                                       1/4 
+  Verifying  : kubernetes-cni-0.5.1-0.x86_64                                2/4 
+  Verifying  : kubeadm-1.8.4-0.x86_64                                       3/4 
+  Verifying  : kubectl-1.8.4-0.x86_64                                       4/4 
+
+Installed:
+  kubeadm.x86_64 0:1.8.4-0                                                      
+
+Dependency Installed:
+  kubectl.x86_64 0:1.8.4-0                   kubelet.x86_64 0:1.8.4-0           
+  kubernetes-cni.x86_64 0:0.5.1-0           
+
+Complete!
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Created symlink from /etc/systemd/system/multi-user.target.wants/kubelet.service to /etc/systemd/system/kubelet.service.
+INFO: install k8s on master(192.168.20.232) finished
+INFO: begin to init k8s master(192.168.20.232) ...
+INFO: begin to scp scripts to master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+INFO: scp scripts to master(192.168.20.232) finished
+INFO: begin to scp and load images on master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+images/
+images/kube-apiserver-amd64.tar
+images/kube-controller-manager-amd64.tar
+images/kube-scheduler-amd64.tar
+images/kube-proxy-amd64.tar
+images/k8s-dns-sidecar-amd64.tar
+images/k8s-dns-kube-dns-amd64.tar
+images/k8s-dns-dnsmasq-nanny-amd64.tar
+images/etcd-amd64.tar
+images/pause-amd64.tar
+images/kubernetes-dashboard-amd64.tar
+images/node.tar
+images/kube-controllers.tar
+images/cni.tar
+images/etcd.tar
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Loaded image: quay.io/calico/cni:v1.11.1
+Loaded image: gcr.io/google_containers/etcd-amd64:3.0.17
+Loaded image: quay.io/coreos/etcd:v3.1.10
+Loaded image: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.5
+Loaded image: gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.5
+Loaded image: gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.5
+Loaded image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.4
+Loaded image: gcr.io/google_containers/kube-controller-manager-amd64:v1.8.4
+Loaded image: quay.io/calico/kube-controllers:v1.0.1
+Loaded image: gcr.io/google_containers/kube-proxy-amd64:v1.8.4
+Loaded image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.8.0
+Loaded image: gcr.io/google_containers/kube-scheduler-amd64:v1.8.4
+Loaded image: quay.io/calico/node:v2.6.3
+Loaded image: gcr.io/google_containers/pause-amd64:3.0
+INFO: scp and load images on master(192.168.20.232) finished
+INFO: begin to install k8s on master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.nju.edu.cn
+ * extras: mirrors.nju.edu.cn
+ * updates: mirrors.tuna.tsinghua.edu.cn
+Package kubeadm-1.8.4-0.x86_64 already installed and latest version
+Nothing to do
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+INFO: install k8s on master(192.168.20.232) finished
+INFO: begin to init k8s master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+W0223 16:05:13.515287  154580 factory_object_mapping.go:423] Failed to download OpenAPI (Get https://192.168.20.232:6443/swagger-2.0.0.pb-v1: dial tcp 192.168.20.232:6443: getsockopt: connection refused), falling back to swagger
+The connection to the server 192.168.20.232:6443 was refused - did you specify the right host or port?
+[1;31mERROR: k8s init calico failed[0m
+[1;31mERROR: init k8s master(192.168.20.232) failed[0m
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+The connection to the server 192.168.20.232:6443 was refused - did you specify the right host or port?
+[1;33mWARNING: ssh 192.168.20.233 kubectl drain VM03.sky-data.cn --delete-local-data --force --ignore-daemonsets && kubectl delete node VM03.sky-data.cn failed, continue to drain and delete next node[0m
+Warning: Permanently added '192.168.20.233' (ECDSA) to the list of known hosts.
+bash: kubeadm: command not found
+[1;33mWARNING: ssh 192.168.20.233 kubeadm reset failed, continue to reset next k8s node[0m
+Warning: Permanently added '192.168.20.233' (ECDSA) to the list of known hosts.
+INFO: 192.168.20.233 has not installed kubenetes
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+[preflight] Running pre-flight checks
+[reset] Stopping the kubelet service
+[reset] Unmounting mounted directories in "/var/lib/kubelet"
+[reset] Removing kubernetes-managed containers
+[reset] Deleting contents of stateful directories: [/var/lib/kubelet /etc/cni/net.d /var/lib/dockershim /var/run/kubernetes /var/lib/etcd]
+[reset] Deleting contents of config directories: [/etc/kubernetes/manifests /etc/kubernetes/pki]
+[reset] Deleting files: [/etc/kubernetes/admin.conf /etc/kubernetes/kubelet.conf /etc/kubernetes/controller-manager.conf /etc/kubernetes/scheduler.conf]
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+kubectl-1.8.4-0.x86_64
+kubelet-1.8.4-0.x86_64
+kubeadm-1.8.4-0.x86_64
+kubernetes-cni-0.5.1-0.x86_64
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Removed symlink /etc/systemd/system/multi-user.target.wants/kubelet.service.
+Loaded plugins: fastestmirror
+Resolving Dependencies
+--> Running transaction check
+---> Package kubeadm.x86_64 0:1.8.4-0 will be erased
+---> Package kubectl.x86_64 0:1.8.4-0 will be erased
+---> Package kubelet.x86_64 0:1.8.4-0 will be erased
+---> Package kubernetes-cni.x86_64 0:0.5.1-0 will be erased
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package               Arch          Version           Repository          Size
+================================================================================
+Removing:
+ kubeadm               x86_64        1.8.4-0           @SkyAXE-k8s         89 M
+ kubectl               x86_64        1.8.4-0           @SkyAXE-k8s         36 M
+ kubelet               x86_64        1.8.4-0           @SkyAXE-k8s         89 M
+ kubernetes-cni        x86_64        0.5.1-0           @SkyAXE-k8s         28 M
+
+Transaction Summary
+================================================================================
+Remove  4 Packages
+
+Installed size: 242 M
+Downloading packages:
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Erasing    : kubeadm-1.8.4-0.x86_64                                       1/4 
+  Erasing    : kubernetes-cni-0.5.1-0.x86_64                                2/4 
+  Erasing    : kubelet-1.8.4-0.x86_64                                       3/4 
+  Erasing    : kubectl-1.8.4-0.x86_64                                       4/4 
+  Verifying  : kubelet-1.8.4-0.x86_64                                       1/4 
+  Verifying  : kubernetes-cni-0.5.1-0.x86_64                                2/4 
+  Verifying  : kubeadm-1.8.4-0.x86_64                                       3/4 
+  Verifying  : kubectl-1.8.4-0.x86_64                                       4/4 
+
+Removed:
+  kubeadm.x86_64 0:1.8.4-0            kubectl.x86_64 0:1.8.4-0                  
+  kubelet.x86_64 0:1.8.4-0            kubernetes-cni.x86_64 0:0.5.1-0           
+
+Complete!
+INFO: begin to scp scripts to master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+INFO: scp scripts to master(192.168.20.232) finished
+INFO: begin to scp and load images on master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+images/
+images/kube-apiserver-amd64.tar
+images/kube-controller-manager-amd64.tar
+images/kube-scheduler-amd64.tar
+images/kube-proxy-amd64.tar
+images/k8s-dns-sidecar-amd64.tar
+images/k8s-dns-kube-dns-amd64.tar
+images/k8s-dns-dnsmasq-nanny-amd64.tar
+images/etcd-amd64.tar
+images/pause-amd64.tar
+images/kubernetes-dashboard-amd64.tar
+images/node.tar
+images/kube-controllers.tar
+images/cni.tar
+images/etcd.tar
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Loaded image: quay.io/calico/cni:v1.11.1
+Loaded image: gcr.io/google_containers/etcd-amd64:3.0.17
+Loaded image: quay.io/coreos/etcd:v3.1.10
+Loaded image: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.5
+Loaded image: gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.5
+Loaded image: gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.5
+Loaded image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.4
+Loaded image: gcr.io/google_containers/kube-controller-manager-amd64:v1.8.4
+Loaded image: quay.io/calico/kube-controllers:v1.0.1
+Loaded image: gcr.io/google_containers/kube-proxy-amd64:v1.8.4
+Loaded image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.8.0
+Loaded image: gcr.io/google_containers/kube-scheduler-amd64:v1.8.4
+Loaded image: quay.io/calico/node:v2.6.3
+Loaded image: gcr.io/google_containers/pause-amd64:3.0
+INFO: scp and load images on master(192.168.20.232) finished
+INFO: begin to install k8s on master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.nju.edu.cn
+ * extras: mirrors.nju.edu.cn
+ * updates: mirrors.tuna.tsinghua.edu.cn
+Resolving Dependencies
+--> Running transaction check
+---> Package kubeadm.x86_64 0:1.8.4-0 will be installed
+--> Processing Dependency: kubelet >= 1.6.0 for package: kubeadm-1.8.4-0.x86_64
+--> Processing Dependency: kubectl >= 1.6.0 for package: kubeadm-1.8.4-0.x86_64
+--> Processing Dependency: kubernetes-cni for package: kubeadm-1.8.4-0.x86_64
+--> Running transaction check
+---> Package kubectl.x86_64 0:1.8.4-0 will be installed
+---> Package kubelet.x86_64 0:1.8.4-0 will be installed
+---> Package kubernetes-cni.x86_64 0:0.5.1-0 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package                Arch           Version         Repository          Size
+================================================================================
+Installing:
+ kubeadm                x86_64         1.8.4-0         SkyAXE-k8s          15 M
+Installing for dependencies:
+ kubectl                x86_64         1.8.4-0         SkyAXE-k8s         7.3 M
+ kubelet                x86_64         1.8.4-0         SkyAXE-k8s          16 M
+ kubernetes-cni         x86_64         0.5.1-0         SkyAXE-k8s         7.4 M
+
+Transaction Summary
+================================================================================
+Install  1 Package (+3 Dependent packages)
+
+Total download size: 45 M
+Installed size: 242 M
+Downloading packages:
+--------------------------------------------------------------------------------
+Total                                              152 MB/s |  45 MB  00:00     
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : kubernetes-cni-0.5.1-0.x86_64                                1/4 
+  Installing : kubelet-1.8.4-0.x86_64                                       2/4 
+  Installing : kubectl-1.8.4-0.x86_64                                       3/4 
+  Installing : kubeadm-1.8.4-0.x86_64                                       4/4 
+  Verifying  : kubelet-1.8.4-0.x86_64                                       1/4 
+  Verifying  : kubernetes-cni-0.5.1-0.x86_64                                2/4 
+  Verifying  : kubeadm-1.8.4-0.x86_64                                       3/4 
+  Verifying  : kubectl-1.8.4-0.x86_64                                       4/4 
+
+Installed:
+  kubeadm.x86_64 0:1.8.4-0                                                      
+
+Dependency Installed:
+  kubectl.x86_64 0:1.8.4-0                   kubelet.x86_64 0:1.8.4-0           
+  kubernetes-cni.x86_64 0:0.5.1-0           
+
+Complete!
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Created symlink from /etc/systemd/system/multi-user.target.wants/kubelet.service to /etc/systemd/system/kubelet.service.
+INFO: install k8s on master(192.168.20.232) finished
+INFO: begin to init k8s master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+W0223 16:09:52.718729  156391 factory_object_mapping.go:423] Failed to download OpenAPI (Get https://192.168.20.232:6443/swagger-2.0.0.pb-v1: dial tcp 192.168.20.232:6443: getsockopt: connection refused), falling back to swagger
+The connection to the server 192.168.20.232:6443 was refused - did you specify the right host or port?
+[1;31mERROR: k8s init calico failed[0m
+[1;31mERROR: init k8s master(192.168.20.232) failed[0m
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+The connection to the server 192.168.20.232:6443 was refused - did you specify the right host or port?
+[1;33mWARNING: ssh 192.168.20.233 kubectl drain VM03.sky-data.cn --delete-local-data --force --ignore-daemonsets && kubectl delete node VM03.sky-data.cn failed, continue to drain and delete next node[0m
+Warning: Permanently added '192.168.20.233' (ECDSA) to the list of known hosts.
+bash: kubeadm: command not found
+[1;33mWARNING: ssh 192.168.20.233 kubeadm reset failed, continue to reset next k8s node[0m
+Warning: Permanently added '192.168.20.233' (ECDSA) to the list of known hosts.
+INFO: 192.168.20.233 has not installed kubenetes
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+[preflight] Running pre-flight checks
+[reset] Stopping the kubelet service
+[reset] Unmounting mounted directories in "/var/lib/kubelet"
+[reset] Removing kubernetes-managed containers
+[reset] Deleting contents of stateful directories: [/var/lib/kubelet /etc/cni/net.d /var/lib/dockershim /var/run/kubernetes /var/lib/etcd]
+[reset] Deleting contents of config directories: [/etc/kubernetes/manifests /etc/kubernetes/pki]
+[reset] Deleting files: [/etc/kubernetes/admin.conf /etc/kubernetes/kubelet.conf /etc/kubernetes/controller-manager.conf /etc/kubernetes/scheduler.conf]
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+kubectl-1.8.4-0.x86_64
+kubelet-1.8.4-0.x86_64
+kubeadm-1.8.4-0.x86_64
+kubernetes-cni-0.5.1-0.x86_64
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Removed symlink /etc/systemd/system/multi-user.target.wants/kubelet.service.
+Loaded plugins: fastestmirror
+Resolving Dependencies
+--> Running transaction check
+---> Package kubeadm.x86_64 0:1.8.4-0 will be erased
+---> Package kubectl.x86_64 0:1.8.4-0 will be erased
+---> Package kubelet.x86_64 0:1.8.4-0 will be erased
+---> Package kubernetes-cni.x86_64 0:0.5.1-0 will be erased
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package               Arch          Version           Repository          Size
+================================================================================
+Removing:
+ kubeadm               x86_64        1.8.4-0           @SkyAXE-k8s         89 M
+ kubectl               x86_64        1.8.4-0           @SkyAXE-k8s         36 M
+ kubelet               x86_64        1.8.4-0           @SkyAXE-k8s         89 M
+ kubernetes-cni        x86_64        0.5.1-0           @SkyAXE-k8s         28 M
+
+Transaction Summary
+================================================================================
+Remove  4 Packages
+
+Installed size: 242 M
+Downloading packages:
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Erasing    : kubeadm-1.8.4-0.x86_64                                       1/4 
+  Erasing    : kubernetes-cni-0.5.1-0.x86_64                                2/4 
+  Erasing    : kubelet-1.8.4-0.x86_64                                       3/4 
+  Erasing    : kubectl-1.8.4-0.x86_64                                       4/4 
+  Verifying  : kubelet-1.8.4-0.x86_64                                       1/4 
+  Verifying  : kubernetes-cni-0.5.1-0.x86_64                                2/4 
+  Verifying  : kubeadm-1.8.4-0.x86_64                                       3/4 
+  Verifying  : kubectl-1.8.4-0.x86_64                                       4/4 
+
+Removed:
+  kubeadm.x86_64 0:1.8.4-0            kubectl.x86_64 0:1.8.4-0                  
+  kubelet.x86_64 0:1.8.4-0            kubernetes-cni.x86_64 0:0.5.1-0           
+
+Complete!
+INFO: begin to scp scripts to master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+INFO: scp scripts to master(192.168.20.232) finished
+INFO: begin to scp and load images on master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+images/
+images/kube-apiserver-amd64.tar
+images/kube-controller-manager-amd64.tar
+images/kube-scheduler-amd64.tar
+images/kube-proxy-amd64.tar
+images/k8s-dns-sidecar-amd64.tar
+images/k8s-dns-kube-dns-amd64.tar
+images/k8s-dns-dnsmasq-nanny-amd64.tar
+images/etcd-amd64.tar
+images/pause-amd64.tar
+images/kubernetes-dashboard-amd64.tar
+images/node.tar
+images/kube-controllers.tar
+images/cni.tar
+images/etcd.tar
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Loaded image: quay.io/calico/cni:v1.11.1
+Loaded image: gcr.io/google_containers/etcd-amd64:3.0.17
+Loaded image: quay.io/coreos/etcd:v3.1.10
+Loaded image: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.5
+Loaded image: gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.5
+Loaded image: gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.5
+Loaded image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.4
+Loaded image: gcr.io/google_containers/kube-controller-manager-amd64:v1.8.4
+Loaded image: quay.io/calico/kube-controllers:v1.0.1
+Loaded image: gcr.io/google_containers/kube-proxy-amd64:v1.8.4
+Loaded image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.8.0
+Loaded image: gcr.io/google_containers/kube-scheduler-amd64:v1.8.4
+Loaded image: quay.io/calico/node:v2.6.3
+Loaded image: gcr.io/google_containers/pause-amd64:3.0
+INFO: scp and load images on master(192.168.20.232) finished
+INFO: begin to install k8s on master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.nju.edu.cn
+ * extras: mirrors.nju.edu.cn
+ * updates: mirrors.tuna.tsinghua.edu.cn
+Resolving Dependencies
+--> Running transaction check
+---> Package kubeadm.x86_64 0:1.8.4-0 will be installed
+--> Processing Dependency: kubelet >= 1.6.0 for package: kubeadm-1.8.4-0.x86_64
+--> Processing Dependency: kubectl >= 1.6.0 for package: kubeadm-1.8.4-0.x86_64
+--> Processing Dependency: kubernetes-cni for package: kubeadm-1.8.4-0.x86_64
+--> Running transaction check
+---> Package kubectl.x86_64 0:1.8.4-0 will be installed
+---> Package kubelet.x86_64 0:1.8.4-0 will be installed
+---> Package kubernetes-cni.x86_64 0:0.5.1-0 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package                Arch           Version         Repository          Size
+================================================================================
+Installing:
+ kubeadm                x86_64         1.8.4-0         SkyAXE-k8s          15 M
+Installing for dependencies:
+ kubectl                x86_64         1.8.4-0         SkyAXE-k8s         7.3 M
+ kubelet                x86_64         1.8.4-0         SkyAXE-k8s          16 M
+ kubernetes-cni         x86_64         0.5.1-0         SkyAXE-k8s         7.4 M
+
+Transaction Summary
+================================================================================
+Install  1 Package (+3 Dependent packages)
+
+Total download size: 45 M
+Installed size: 242 M
+Downloading packages:
+--------------------------------------------------------------------------------
+Total                                              154 MB/s |  45 MB  00:00     
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : kubernetes-cni-0.5.1-0.x86_64                                1/4 
+  Installing : kubelet-1.8.4-0.x86_64                                       2/4 
+  Installing : kubectl-1.8.4-0.x86_64                                       3/4 
+  Installing : kubeadm-1.8.4-0.x86_64                                       4/4 
+  Verifying  : kubelet-1.8.4-0.x86_64                                       1/4 
+  Verifying  : kubernetes-cni-0.5.1-0.x86_64                                2/4 
+  Verifying  : kubeadm-1.8.4-0.x86_64                                       3/4 
+  Verifying  : kubectl-1.8.4-0.x86_64                                       4/4 
+
+Installed:
+  kubeadm.x86_64 0:1.8.4-0                                                      
+
+Dependency Installed:
+  kubectl.x86_64 0:1.8.4-0                   kubelet.x86_64 0:1.8.4-0           
+  kubernetes-cni.x86_64 0:0.5.1-0           
+
+Complete!
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Created symlink from /etc/systemd/system/multi-user.target.wants/kubelet.service to /etc/systemd/system/kubelet.service.
+INFO: install k8s on master(192.168.20.232) finished
+INFO: begin to init k8s master(192.168.20.232) ...
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+W0223 16:12:45.223208  157824 factory_object_mapping.go:423] Failed to download OpenAPI (Get https://192.168.20.232:6443/swagger-2.0.0.pb-v1: dial tcp 192.168.20.232:6443: getsockopt: connection refused), falling back to swagger
+The connection to the server 192.168.20.232:6443 was refused - did you specify the right host or port?
+[1;31mERROR: k8s init calico failed[0m
+[1;31mERROR: init k8s master(192.168.20.232) failed[0m
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+The connection to the server 192.168.20.232:6443 was refused - did you specify the right host or port?
+[1;33mWARNING: ssh 192.168.20.233 kubectl drain VM03.sky-data.cn --delete-local-data --force --ignore-daemonsets && kubectl delete node VM03.sky-data.cn failed, continue to drain and delete next node[0m
+Warning: Permanently added '192.168.20.233' (ECDSA) to the list of known hosts.
+bash: kubeadm: command not found
+[1;33mWARNING: ssh 192.168.20.233 kubeadm reset failed, continue to reset next k8s node[0m
+Warning: Permanently added '192.168.20.233' (ECDSA) to the list of known hosts.
+INFO: 192.168.20.233 has not installed kubenetes
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+[preflight] Running pre-flight checks
+[reset] Stopping the kubelet service
+[reset] Unmounting mounted directories in "/var/lib/kubelet"
+[reset] Removing kubernetes-managed containers
+[reset] Deleting contents of stateful directories: [/var/lib/kubelet /etc/cni/net.d /var/lib/dockershim /var/run/kubernetes /var/lib/etcd]
+[reset] Deleting contents of config directories: [/etc/kubernetes/manifests /etc/kubernetes/pki]
+[reset] Deleting files: [/etc/kubernetes/admin.conf /etc/kubernetes/kubelet.conf /etc/kubernetes/controller-manager.conf /etc/kubernetes/scheduler.conf]
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+kubectl-1.8.4-0.x86_64
+kubelet-1.8.4-0.x86_64
+kubeadm-1.8.4-0.x86_64
+kubernetes-cni-0.5.1-0.x86_64
+Warning: Permanently added '192.168.20.232' (ECDSA) to the list of known hosts.
+Removed symlink /etc/systemd/system/multi-user.target.wants/kubelet.service.
+Loaded plugins: fastestmirror
+Resolving Dependencies
+--> Running transaction check
+---> Package kubeadm.x86_64 0:1.8.4-0 will be erased
+---> Package kubectl.x86_64 0:1.8.4-0 will be erased
+---> Package kubelet.x86_64 0:1.8.4-0 will be erased
+---> Package kubernetes-cni.x86_64 0:0.5.1-0 will be erased
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package               Arch          Version           Repository          Size
+================================================================================
+Removing:
+ kubeadm               x86_64        1.8.4-0           @SkyAXE-k8s         89 M
+ kubectl               x86_64        1.8.4-0           @SkyAXE-k8s         36 M
+ kubelet               x86_64        1.8.4-0           @SkyAXE-k8s         89 M
+ kubernetes-cni        x86_64        0.5.1-0           @SkyAXE-k8s         28 M
+
+Transaction Summary
+================================================================================
+Remove  4 Packages
+
+Installed size: 242 M
+Downloading packages:
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Erasing    : kubeadm-1.8.4-0.x86_64                                       1/4 
+  Erasing    : kubernetes-cni-0.5.1-0.x86_64                                2/4 
+  Erasing    : kubelet-1.8.4-0.x86_64                                       3/4 
+  Erasing    : kubectl-1.8.4-0.x86_64                                       4/4 
+  Verifying  : kubelet-1.8.4-0.x86_64                                       1/4 
+  Verifying  : kubernetes-cni-0.5.1-0.x86_64                                2/4 
+  Verifying  : kubeadm-1.8.4-0.x86_64                                       3/4 
+  Verifying  : kubectl-1.8.4-0.x86_64                                       4/4 
+
+Removed:
+  kubeadm.x86_64 0:1.8.4-0            kubectl.x86_64 0:1.8.4-0                  
+  kubelet.x86_64 0:1.8.4-0            kubernetes-cni.x86_64 0:0.5.1-0           
+
+Complete!
