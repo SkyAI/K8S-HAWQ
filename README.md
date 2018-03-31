@@ -22,7 +22,6 @@
 	[root@skyaxe-computing-0 k8s]# 
 
 
-其中，在gitlab上没有pkgs目录，考虑到pkgs目录内文件内容过大，所以将其放置在nfs上的develop\platform\SkyAXE\3.0.0-rc1\pkgs\kubernetes目录下。
 
 # 步骤
 
